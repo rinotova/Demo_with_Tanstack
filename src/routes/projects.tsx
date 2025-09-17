@@ -1,24 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { projects } from '../data/projects'
 
 export const Route = createFileRoute('/projects')({ component: Projects })
 
-const projects = [
-  {
-    name: 'VSCode-like Portfolio',
-    description: 'This site. Built with TanStack Start, Tailwind & shadcn/ui.',
-    url: 'https://github.com/',
-  },
-  {
-    name: 'CLI Playground',
-    description: 'Interactive terminal UI powered by React hooks.',
-    url: 'https://github.com/',
-  },
-  {
-    name: 'Data Viz Demos',
-    description: 'A collection of charts built with D3 & React.',
-    url: 'https://github.com/',
-  },
-]
+// uses shared projects data
 
 function Projects() {
   return (
@@ -40,4 +25,3 @@ function Projects() {
     </div>
   )
 }
-

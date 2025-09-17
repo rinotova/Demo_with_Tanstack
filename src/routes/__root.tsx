@@ -34,6 +34,17 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     <html lang="en" className="dark">
       <head>
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            try {
+              var t = localStorage.getItem('theme');
+              var d = document.documentElement.classList;
+              if (t === 'light') { d.remove('dark'); } else { d.add('dark'); }
+            } catch {}
+          `,
+          }}
+        />
       </head>
       <body className="bg-[#1e1e1e] text-gray-200">
         <VscodeLayout>{children}</VscodeLayout>

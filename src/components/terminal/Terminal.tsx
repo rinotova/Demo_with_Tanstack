@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ScrollArea } from '../ui/scroll-area'
+import { setTheme } from '../../lib/theme'
 
 type Line = { type: 'in' | 'out'; text: string }
 
@@ -53,6 +54,7 @@ export default function Terminal() {
         emit('  goto <page>        Same as open')
         emit('  cd <page>          Same as open')
         emit('  clear              Clear the terminal')
+        emit('  theme <dark|light> Set theme')
         break
       }
       case 'clear': {
@@ -74,6 +76,16 @@ export default function Terminal() {
           | '/contact'
         navigate({ to: path })
         emit(`Opened ${path}`)
+        break
+      }
+      case 'theme': {
+        const t = (arg || 'dark').toLowerCase()
+        if (t === 'dark' || t === 'light') {
+          setTheme(t)
+          emit(`Theme set to ${t}`)
+        } else {
+          emit('Usage: theme <dark|light>')
+        }
         break
       }
       default: {
