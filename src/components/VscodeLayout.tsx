@@ -38,6 +38,8 @@ export default function VscodeLayout({ children }: Props) {
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewSlug, setPreviewSlug] = useState<string | null>(null)
+  const [isNarrow, setIsNarrow] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   useEffect(() => {
     localStorage.setItem('panel:h', String(panelHeight))
@@ -121,6 +123,15 @@ export default function VscodeLayout({ children }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // Track narrow viewport (mobile)
+  useEffect(() => {
+    const q = window.matchMedia('(max-width: 767px)')
+    const set = () => setIsNarrow(q.matches)
+    set()
+    q.addEventListener('change', set)
+    return () => q.removeEventListener('change', set)
+  }, [])
+
   // Listen for preview/theme events from palette/search
   useEffect(() => {
     const onOpenPreview = (e: any) => {
@@ -145,16 +156,16 @@ export default function VscodeLayout({ children }: Props) {
       style={{ display: 'grid', gridTemplateRows: `1fr ${panelHeight}px 24px` }}
     >
       <div
-        className="overflow-hidden"
+        className="overflow-hidden relative"
         style={{
           display: 'grid',
-          gridTemplateColumns: `3.2rem ${sidebarW}px 1fr`,
+          gridTemplateColumns: `3.2rem ${isNarrow ? 0 : sidebarW}px 1fr`,
         }}
       >
         <ActivityBar />
-        <SideNav onResizeStart={onSideDragStart} />
+        <SideNav onResizeStart={onSideDragStart} overlay={false} />
         <main className="relative bg-[#1e1e1e] border-l border-[#2a2a2a] overflow-auto flex flex-col">
-          <EditorTabs />
+          <EditorTabs isNarrow={isNarrow} onToggleMenu={() => setDrawerOpen(true)} />
           <div className="flex-1 overflow-auto">{children}</div>
           {/* vertical resize handle overlay for accessibility */}
           <div
@@ -162,6 +173,23 @@ export default function VscodeLayout({ children }: Props) {
             aria-hidden
           />
         </main>
+
+        {/* Mobile drawer overlay for sidebar */}
+        {isNarrow && drawerOpen ? (
+          <div className="absolute inset-0 z-50">
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setDrawerOpen(false)}
+            />
+            <div
+              className="absolute top-0 bottom-0 left-[3.2rem] w-[80vw] max-w-[20rem] bg-[#252526] border-r border-[#2a2a2a] shadow-xl"
+              role="dialog"
+              aria-label="Sidebar menu"
+            >
+              <SideNav overlay />
+            </div>
+          </div>
+        ) : null}
       </div>
       <div className="relative border-t border-[#2a2a2a] bg-[#1e1e1e]">
         <div
@@ -196,14 +224,13 @@ function ActivityBar() {
       <Link to="/contact" className="p-1" title="Contact">
         <span className={iconCls}>✉️</span>
       </Link>
-      <div className="mt-auto pb-2 text-xs text-gray-500">VS Code</div>
     </aside>
   )
 }
 
-function SideNav({ onResizeStart }: { onResizeStart: (e: React.MouseEvent) => void }) {
+function SideNav({ onResizeStart, overlay = false }: { onResizeStart?: (e: React.MouseEvent) => void; overlay?: boolean }) {
   return (
-    <aside className="relative bg-[#252526] text-gray-200 border-r border-[#2a2a2a] flex flex-col">
+    <aside className="relative bg-[#252526] text-gray-200 border-r border-[#2a2a2a] flex flex-col h-full">
       <div className="px-3 py-2 text-xs tracking-wide text-gray-400">EXPLORER</div>
       <Separator className="bg-[#2a2a2a]" />
       <GlobalSearch />
@@ -211,12 +238,14 @@ function SideNav({ onResizeStart }: { onResizeStart: (e: React.MouseEvent) => vo
         <Explorer />
       </ScrollArea>
       {/* vertical resizer */}
-      <div
-        onMouseDown={onResizeStart}
-        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize"
-        aria-label="Resize sidebar"
-        title="Drag to resize"
-      />
+      {!overlay && onResizeStart ? (
+        <div
+          onMouseDown={onResizeStart}
+          className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize"
+          aria-label="Resize sidebar"
+          title="Drag to resize"
+        />
+      ) : null}
     </aside>
   )
 }
@@ -273,7 +302,7 @@ function TreeItem({ label, onClick }: { label: string; onClick?: () => void }) {
   )
 }
 
-function EditorTabs() {
+function EditorTabs({ isNarrow, onToggleMenu }: { isNarrow: boolean; onToggleMenu: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
 
   const labelFor = useMemo(() => {
@@ -388,6 +417,16 @@ function EditorTabs() {
 
   return (
     <div className="h-8 flex items-stretch bg-[#2d2d2d] border-b border-[#2a2a2a] select-none">
+      {isNarrow ? (
+        <button
+          onClick={onToggleMenu}
+          className="px-3 text-sm text-gray-200 hover:text-white"
+          title="Open menu"
+          aria-label="Open menu"
+        >
+          ☰
+        </button>
+      ) : null}
       {openTabs.map((t, i) => {
         const active = pathname === t.to
         return (

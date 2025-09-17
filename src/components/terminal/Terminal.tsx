@@ -113,9 +113,6 @@ export default function Terminal() {
       <div className="flex items-center gap-4 px-3 text-xs bg-[#2d2d2d] border-b border-[#2a2a2a]">
         <div className="flex items-center gap-3">
           <span className="text-white">TERMINAL</span>
-          <span className="text-gray-400">OUTPUT</span>
-          <span className="text-gray-400">PROBLEMS</span>
-          <span className="text-gray-400">DEBUG CONSOLE</span>
         </div>
         <div className="ml-auto flex items-center gap-3 text-gray-400">
           <span title="New Terminal">+</span>
