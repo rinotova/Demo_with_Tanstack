@@ -1,6 +1,4 @@
 import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanstackDevtools } from '@tanstack/react-devtools'
 import appCss from '../styles.css?url'
 import VscodeLayout from '../components/VscodeLayout'
 
@@ -48,17 +46,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="bg-[#1e1e1e] text-gray-200">
         <VscodeLayout>{children}</VscodeLayout>
-        <TanstackDevtools
-          config={{
-            position: 'bottom-left',
-          }}
-          plugins={[
-            {
-              name: 'Tanstack Router',
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-          ]}
-        />
         <Scripts />
       </body>
     </html>
