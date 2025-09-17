@@ -1,8 +1,8 @@
-import { Link, useRouterState } from '@tanstack/react-router'
+import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { Separator } from './ui/separator'
 import { ScrollArea } from './ui/scroll-area'
 import Terminal from './terminal/Terminal'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 type Props = {
   children: React.ReactNode
@@ -132,29 +132,95 @@ function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
 }
 
 function EditorTabs() {
-  const routerState = useRouterState({ select: (s) => s.location.pathname })
-  const tabs = [
-    { label: 'home.tsx', to: '/' },
-    { label: 'projects.tsx', to: '/projects' },
-    { label: 'about.tsx', to: '/about' },
-    { label: 'contact.tsx', to: '/contact' },
-  ] as const
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+
+  const labelFor = useMemo(() => {
+    const map: Record<string, string> = {
+      '/': 'home.tsx',
+      '/projects': 'projects.tsx',
+      '/about': 'about.tsx',
+      '/contact': 'contact.tsx',
+    }
+    return (p: string) => {
+      if (map[p]) return map[p]
+      const seg = p.split('/').filter(Boolean).pop() || 'home'
+      return `${seg}.tsx`
+    }
+  }, [])
+
+  type Tab = { to: string; label: string }
+
+  const [openTabs, setOpenTabs] = useState<Tab[]>(() => {
+    if (typeof window === 'undefined') return [{ to: pathname, label: 'home.tsx' }]
+    try {
+      const raw = localStorage.getItem('tabs:open')
+      const parsed: Tab[] | null = raw ? JSON.parse(raw) : null
+      if (parsed && parsed.length) return parsed
+    } catch {}
+    return [{ to: pathname, label: labelFor(pathname) }]
+  })
+
+  // Persist tabs
+  useEffect(() => {
+    try {
+      localStorage.setItem('tabs:open', JSON.stringify(openTabs))
+    } catch {}
+  }, [openTabs])
+
+  // Ensure current route is opened as a tab
+  useEffect(() => {
+    setOpenTabs((tabs) => {
+      if (tabs.some((t) => t.to === pathname)) return tabs
+      return [...tabs, { to: pathname, label: labelFor(pathname) }]
+    })
+  }, [pathname, labelFor])
+
+  const navigate = useNavigate()
+
+  function closeTab(e: React.MouseEvent, to: string) {
+    e.preventDefault()
+    e.stopPropagation()
+    setOpenTabs((tabs) => {
+      const idx = tabs.findIndex((t) => t.to === to)
+      if (idx === -1) return tabs
+      const nextTabs = [...tabs.slice(0, idx), ...tabs.slice(idx + 1)]
+      // If closing the active tab, navigate to neighbor or home
+      if (to === pathname) {
+        const neighbor = nextTabs[idx]?.to || nextTabs[idx - 1]?.to || '/'
+        window.queueMicrotask(() => {
+          navigate({ to: neighbor as any })
+        })
+      }
+      return nextTabs.length ? nextTabs : [{ to: '/', label: labelFor('/') }]
+    })
+  }
+
   return (
     <div className="h-8 flex items-stretch bg-[#2d2d2d] border-b border-[#2a2a2a] select-none">
-      {tabs.map((t) => {
-        const active = routerState === t.to
+      {openTabs.map((t) => {
+        const active = pathname === t.to
         return (
           <Link
             key={t.to}
-            to={t.to}
+            to={t.to as any}
             className={[
-              'px-3 text-sm flex items-center gap-2 border-r border-[#2a2a2a]',
+              'pl-3 pr-2 text-sm flex items-center gap-2 border-r border-[#2a2a2a] group',
               active ? 'bg-[#1e1e1e] text-white' : 'text-gray-300 hover:text-white hover:bg-[#3a3a3a]',
             ].join(' ')}
           >
-            <span className="i-tab w-3 h-3" />
+            <span aria-hidden className="text-gray-400">📄</span>
             <span>{t.label}</span>
-            <span className="ml-2 text-gray-500">×</span>
+            <button
+              onClick={(e) => closeTab(e, t.to)}
+              title="Close"
+              className={[
+                'ml-2 rounded px-1 text-gray-500',
+                active ? 'hover:bg-[#4b4b4b] hover:text-white' : 'group-hover:bg-[#4b4b4b] group-hover:text-white',
+              ].join(' ')}
+              aria-label={`Close ${t.label}`}
+            >
+              ×
+            </button>
           </Link>
         )
       })}
