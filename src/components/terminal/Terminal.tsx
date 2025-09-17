@@ -94,8 +94,17 @@ export default function Terminal() {
       className="h-full grid grid-rows-[1.75rem_1fr_2.5rem]"
       onClick={() => inputRef.current?.focus()}
     >
-      <div className="flex items-center gap-2 px-3 text-xs bg-[#2d2d2d] border-b border-[#2a2a2a]">
-        <span className="text-gray-300">TERMINAL</span>
+      <div className="flex items-center gap-4 px-3 text-xs bg-[#2d2d2d] border-b border-[#2a2a2a]">
+        <div className="flex items-center gap-3">
+          <span className="text-white">TERMINAL</span>
+          <span className="text-gray-400">OUTPUT</span>
+          <span className="text-gray-400">PROBLEMS</span>
+          <span className="text-gray-400">DEBUG CONSOLE</span>
+        </div>
+        <div className="ml-auto flex items-center gap-3 text-gray-400">
+          <span title="New Terminal">+</span>
+          <span title="Kill">✕</span>
+        </div>
       </div>
       <ScrollArea className="bg-[#1e1e1e] px-3 py-2 text-sm">
         <div className="space-y-1">
@@ -122,4 +131,3 @@ export default function Terminal() {
     </div>
   )
 }
-
