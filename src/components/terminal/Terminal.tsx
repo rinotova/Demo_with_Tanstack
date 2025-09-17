@@ -67,8 +67,12 @@ export default function Terminal() {
       case 'goto':
       case 'cd': {
         const target = (arg || 'home').toLowerCase()
-        const path = aliases[target as keyof typeof aliases] || target
-        navigate({ to: path as '/' })
+        const path = (aliases[target as keyof typeof aliases] || target) as
+          | '/'
+          | '/projects'
+          | '/about'
+          | '/contact'
+        navigate({ to: path })
         emit(`Opened ${path}`)
         break
       }
